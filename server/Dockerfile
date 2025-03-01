@@ -10,6 +10,8 @@ COPY . .
 RUN apk update && \
     apk add --no-cache openscad
 
+RUN apk add --no-cache openscad xvfb mesa-dri-gallium mesa-egl mesa-gl
+
 EXPOSE 3000
 
 # the program we want to run!

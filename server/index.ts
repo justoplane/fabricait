@@ -24,21 +24,58 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const port = parseInt(process.env.PORT || '3000');
+let scadExists = false;
 
 // Callback function to handle receiving a prompt
 const handlePrompt = async (prompt: string, PM: PromptManager) => {
+  // Check if assets exist
+  const scadFilePath = './assets/input.scad';
+  if (scadExists) {
+    assetsExist(prompt, PM);
+    console.log('SCAD file exists');
+  } else {
+    noAssets(prompt, PM);
+    console.log('SCAD file does not exist');
+  }
+  
+};
+
+const noAssets = async (prompt: string, PM: PromptManager) => {
   try {
     // Make an API call to the AI model.
-    const out = await PM.userAction(prompt);
+    const out = await PM.stringAction(PM.createMessage("user", prompt));
     // Extract scad file from AI resonse and write to input.scad
-    await extractAndWriteSCAD(out, './assets/input.scad');
+    if (out.content) {
+        await extractAndWriteSCAD(out.content, './assets/input.scad');
+    } else {
+        throw new Error('AI response content is null');
+    }
     // Generate stl file and params
-    genSTL(out);
+    genSTL();
   } catch (error) {
     console.error('Error processing prompt:', error);
     io.emit('error', 'Failed to process prompt');
   }
-};
+  scadToPng();
+}
+
+const assetsExist = async (prompt: string, PM: PromptManager) => {
+  try {
+    // Make an API call to the AI model.
+    const out = await PM.imageAction(prompt);
+    // Extract scad file from AI resonse and write to input.scad
+    if (out.content) {
+        await extractAndWriteSCAD(out.content, './assets/input.scad');
+    } else {
+        throw new Error('AI response content is null');
+    }
+    // Generate stl file and params
+    genSTL();
+  } catch (error) {
+    console.error('Error processing prompt:', error);
+    io.emit('error', 'Failed to process prompt');
+  }
+}
 
 const updateParams = async (params: any) => {
   try {
@@ -58,11 +95,11 @@ const updateParams = async (params: any) => {
   }
 };
 
-const genSTL = async (out: string) => {
+const genSTL = async () => {
       // Write the output to a file
 
       // Extract custom parameters from the prompt
-      const params = await extractCustomParameters(out);
+      const params = await extractCustomParameters();
       console.log('Custom parameters:', params);
   
       // Convert received scad to stl
@@ -73,23 +110,43 @@ const genSTL = async (out: string) => {
       console.log('stl/params emitted');
 };
 
-const testparsing = async () => {
-  try {
-    const data = await fs.readFile('./assets/input.scad', 'utf-8');
-    const params = await extractCustomParameters(data);
-    console.log(params);
-    io.emit('stl', params);
-    console.log('stl/params emitted');
-  } catch (error) {
-      console.error('Error reading file:', error);
-      throw error;
-  }
-};
+// const testparsing = async () => {
+//   try {
+//     const data = await fs.readFile('./assets/input.scad', 'utf-8');
+//     const params = await extractCustomParameters(data);
+//     console.log(params);
+//     io.emit('stl', params);
+//     console.log('stl/params emitted');
+//   } catch (error) {
+//       console.error('Error reading file:', error);
+//       throw error;
+//   }
+// };
 
 // Convert scad to stl
 const scadToStl = async (): Promise<void> => {
   return new Promise((resolve, reject) => {
     exec(`openscad -o ./assets/output.stl ./assets/input.scad`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`OpenSCAD execution error: ${error.message}`);
+        io.emit('error', 'OpenSCAD failed to generate STL');
+        reject(error);
+        return;
+      }
+      if (stdout) {
+        console.log(`stdout: ${stdout}`);
+      }
+      if (stderr) {
+        console.error(`stderr: ${stderr}`);
+      }
+      resolve(); // Resolve after execution completes
+    });
+  });
+};
+
+const scadToPng = async (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    exec(`Xvfb :99 -screen 0 1280x1024x24 -ac & export DISPLAY=:99 && openscad -o ./assets/image.png --viewall ./assets/input.scad`, (error, stdout, stderr) => {
       if (error) {
         console.error(`OpenSCAD execution error: ${error.message}`);
         io.emit('error', 'OpenSCAD failed to generate STL');
@@ -114,8 +171,8 @@ io.on('connection', (socket) => {
   // Listen for text prompts from the client.
   socket.on('message', async (prompt) => {
     console.log('prompt received:', prompt);
-    //handlePrompt(prompt, PM);
-    testparsing();
+    handlePrompt(prompt, PM);
+    scadExists = true;
   });
 
   socket.on('message', (message) => {

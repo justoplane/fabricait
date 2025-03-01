@@ -6,8 +6,9 @@ interface CustomParameter {
     description: string;
 }
 
-export async function extractCustomParameters(input: string): Promise<CustomParameter[]> {
-    const lines = input.split('\n');
+export async function extractCustomParameters(): Promise<CustomParameter[]> {
+    const data = await fs.readFile('./assets/input.scad', 'utf-8');
+    const lines = data.split('\n');
     const startIdx = lines.findIndex(line => line.includes("/* START CUSTOM PARAMETERS */"));
     const endIdx = lines.findIndex(line => line.includes("/* END CUSTOM PARAMETERS */"));
     
@@ -58,22 +59,18 @@ export async function writeCustomParameters(input: string, parameters: CustomPar
     console.log(`SCAD content successfully written to ${outputPath}`);
 }
 
-export async function extractAndWriteSCAD(input: string, outputPath: string) {
-    // Split the input string into lines
-    const lines = input.split('\n');
-    
-    // Find the index of the line containing "### BEGIN SCAD"
-    const startIndex = lines.findIndex(line => line.includes("### BEGIN SCAD"));
-    
-    if (startIndex === -1) {
-        console.error("Error: '### BEGIN SCAD' not found in input.");
-        return;
+export async function extractAndWriteSCAD(content: string, outputPath: string) {
+    try {
+        // Parse the JSON content
+        const parsedContent = JSON.parse(content);
+        
+        // Extract the 'output' value
+        const scadContent = parsedContent.output;
+        
+        // Write to the output file
+        await fs.writeFile(outputPath, scadContent, 'utf8');
+        console.log(`SCAD content successfully written to ${outputPath}`);
+    } catch (error) {
+        console.error("Error parsing JSON content or writing to file:", error);
     }
-    
-    // Extract everything below "### BEGIN SCAD"
-    const scadContent = lines.slice(startIndex + 1).join('\n');
-    
-    // Write to the output file
-    await fs.writeFile(outputPath, scadContent, 'utf8');
-    console.log(`SCAD content successfully written to ${outputPath}`);
 }

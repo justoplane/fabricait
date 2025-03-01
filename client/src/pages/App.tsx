@@ -13,6 +13,7 @@ interface CustomParameter {
   param_name: string;
   value: number;
   description: string;
+  original_value: number;
 }
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
     socket.on('stl', (params: CustomParameter[]) => {
       console.log('stl/params received at client');
       setParameters(params);
+      setParameters(params.map(param => ({ ...param, original_value: param.value })));
       setStlUrl(`/assets?timestamp=${Date.now()}`);
     });
 
@@ -70,19 +72,18 @@ function App() {
 
   const emitParamChanges = () => {
     // Emit the updated parameters to the server
-    console.log("WOrking?")
     socket.emit('params', parameters);
   };
 
-  const calcMax = (value: number) => {
+  const calcMax = (param: CustomParameter) => {
     // Calculate the max value for the range input
-    const max = value * 2
+    const max = param.original_value * 2
     return max;
   };
 
-  const calcStep = (value: number) => {
-    // Calculate the step value for the range input
-    const step = (value*2) / 100;
+  const calcStep = (param: CustomParameter) => {
+    // Calculate the max value for the range input
+    const step = (param.original_value*2) / 100;
     return step;
   };
 
@@ -168,8 +169,8 @@ function App() {
               <input
                 type="range"
                 min="0"
-                max="100" // Set max to your required value or dynamically calculate it
-                step="1"
+                max={calcMax(parameter)}
+                step={calcStep(parameter)}
                 value={parameter.value}
                 onChange={(e) => handleSliderChange(index, parseInt(e.target.value))}
                 className="slider"
@@ -204,8 +205,6 @@ function App() {
               <STLModel url={stlUrl} />
             </Suspense>
 
-            {/* Add Ground Plane */}
-            <GroundPlane />
 
             <OrbitControls />
           </Canvas>
