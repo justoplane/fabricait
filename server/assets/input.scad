@@ -1,14 +1,14 @@
 /* Water Bottle with Screw-On Lid - Parametric OpenSCAD Model */
 
 /* START CUSTOM PARAMETERS */
-thread_spacing = 5;  // Spacing between thread turns (mm)
-thread_height = 2;  // Height of the thread on the lid (mm)
-lid_inner_diameter = 65;  // Inner diameter of the lid (mm)
-lid_outer_diameter = 32;  // Outer diameter of the lid (mm)
-lid_height = 30;  // Height of the lid (mm)
-bottle_thickness = 5;  // Wall thickness of the bottle (mm)
-bottle_diameter = 70;  // Diameter of the bottle (mm)
 bottle_height = 44;  // Height of the bottle (mm)
+bottle_diameter = 70;  // Diameter of the bottle (mm)
+bottle_thickness = 5;  // Wall thickness of the bottle (mm)
+lid_height = 30;  // Height of the lid (mm)
+lid_outer_diameter = 32;  // Outer diameter of the lid (mm)
+lid_inner_diameter = 65;  // Inner diameter of the lid (mm)
+thread_height = 2;  // Height of the thread on the lid (mm)
+thread_spacing = 5;  // Spacing between thread turns (mm)
 /* END CUSTOM PARAMETERS */
 
 $fn = 100; // Set resolution for smooth curves

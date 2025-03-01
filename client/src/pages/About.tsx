@@ -1,7 +1,7 @@
 import './App.css';
 import { Link } from 'react-router';
 
-export function Results(){
+export function About(){
     return (
         <div>
             <header>
@@ -13,7 +13,7 @@ export function Results(){
                 </ul>
             </header>
             <div>
-                <h1>Donate</h1>
+                <h1>About</h1>
             </div>
         </div>
     )

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import './App.css';
 import { socket } from '../socket';
 import { Canvas } from "@react-three/fiber";
@@ -68,6 +69,7 @@ function App() {
 
   const emitParamChanges = () => {
     // Emit the updated parameters to the server
+    console.log("WOrking?")
     socket.emit('params', parameters);
   };
 
@@ -84,6 +86,15 @@ function App() {
 
   return (
     <div className="App">
+      <header>
+        <Link to="/"><img src="fabricait.png" alt="Frabricate logo"/></Link>
+        <ul>
+          <li><Link to="/results">How It Works</Link></li>
+          <li><Link to="/about">About</Link></li>
+          <li><Link to="/donate">Donate</Link></li>
+        </ul>
+        </header>
+      <section id="main">
       <div className="sidebar">
         <button onClick={emitParamChanges}>Update Parameters</button>
         <div className="map">
@@ -140,6 +151,8 @@ function App() {
           <a href="/download">Download</a> 
         </div>
       </div>
+      </section>
+      
     </div>
   );
 }
