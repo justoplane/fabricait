@@ -19,6 +19,7 @@ function App() {
   const [parameters, setParameters] = useState<CustomParameter[]>([]);  // Updated to store CustomParameter objects
   const [input, setInput] = useState('');
   const [stlUrl, setStlUrl] = useState('/assets');
+  const [image, setImage] = useState<File | null>(null);
 
   /* Code to handle communication with the server */
   useEffect(() => {
@@ -71,13 +72,74 @@ function App() {
     socket.emit('params', parameters);
   };
 
+  const calcMax = (value: number) => {
+    // Calculate the max value for the range input
+    const max = value * 2
+    return max;
+  };
+
+  const calcStep = (value: number) => {
+    // Calculate the step value for the range input
+    const step = (value*2) / 100;
+    return step;
+  };
+
   const STLModel = ({ url }: { url: string }) => {
     // Use useLoader to load the STL file
     const geometry = useLoader(STLLoader, url) as THREE.BufferGeometry;
   
     return (
-      <mesh geometry={geometry}>
+      <mesh geometry={geometry} castShadow>
         <meshStandardMaterial color="gray" />
+      </mesh>
+    );
+  };
+
+  // Image uploads
+  
+  interface ImageChangeEvent extends React.ChangeEvent<HTMLInputElement> {
+    target: HTMLInputElement & { files: FileList };
+  }
+
+  const handleImageChange = (event: ImageChangeEvent) => {
+    const file = event.target.files[0];
+    if (file) {
+      setImage(file);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!image) {
+      alert("Please select an image first.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("image", image);
+
+    try {
+      const response = await fetch("/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert("Image uploaded successfully! URL: " + data.imageUrl);
+      } else {
+        alert("Upload failed.");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+    }
+  };
+
+  // Ground Plane Component
+  const GroundPlane = () => {
+    return (
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -10, 0]} receiveShadow>
+        <planeGeometry args={[500, 500]} />
+        <meshStandardMaterial color="lightgray" />
       </mesh>
     );
   };
