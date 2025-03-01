@@ -15,14 +15,14 @@ class PromptManager:
     def addUserString(self, s):
         self.dialog.append({"role": "user", "content": s})
         
-    def userAction(self, usr_prompt, structure = NOT_GIVEN):
+    def userAction(self, usr_prompt, structure = None):
         self.addUserString(usr_prompt)
         
         client = OpenAI(api_key = os.getenv("OPEN_API_KEY"))
         response = client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages = self.dialog,
-                    response_format = structure 
+                    # response_format = structure 
         )
         data_out = response.choices[0].message.content
         self.addChatResponse(data_out)        
