@@ -34,6 +34,7 @@ app.use((req, res, next) => {
   next();
 });
 
+/* DB stuff
 app.post('/api/count', async (req, res) => {
   const count = await prisma.count.findFirst({
     where: {
@@ -71,7 +72,7 @@ app.get("/api/count", async (req, res) => {
   } else {
     res.json({ value: 0 });
   }
-});
+});*/
 
 io.on('connection', (socket) => {
   console.log('a user connected');

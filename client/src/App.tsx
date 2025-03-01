@@ -19,15 +19,6 @@ function App() {
 
 
   useEffect(() => {
-    async function getCount() {
-      const response = await fetch('/api/count');
-      const data = await response.json();
-      setCount(data.value);
-    }
-    getCount();
-  }, []);
-
-  useEffect(() => {
     socket.connect();
 
     socket.on('connect', () => {
@@ -46,21 +37,6 @@ function App() {
     };
   }, []);
   
-async function updateCount() {
-  const response = await fetch('/api/count', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ count })
-  });
-  const data = await response.json();
-  setCount(data.value);
-}
-  const handleCountButton = () => {
-    setCount(count + 1);
-    updateCount();
-  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +71,6 @@ async function updateCount() {
     <div className="App">
       <div>
         <Link to="/results">Results</Link> 
-        <button onClick={() => handleCountButton()}>{count}</button>
       </div>
       <h1>Spy Chat</h1>
       <div className="messages">
