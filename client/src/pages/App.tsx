@@ -186,7 +186,10 @@ function App() {
       <div className="main-content">
       <div className="canvas-container">
           <Canvas 
-            camera={{ position: [0, 50, 200] }} 
+            camera={{ position: [0, 50, 200],
+              near: 0.1,
+              far: 10000,
+            }} 
             shadows // Enable shadow support
           >
             {/* Lighting for shading */}
