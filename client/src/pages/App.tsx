@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import { socket } from '../socket';
 import { Link } from 'react-router';
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import { useLoader } from "@react-three/fiber"; // Import useLoader from @react-three/fiber directly
+import { STLLoader } from "three/examples/jsm/loaders/STLLoader"; // Make sure STLLoader is correctly imported
+import { Suspense } from "react";
+import * as THREE from 'three';
 
 
 function App() {
@@ -23,11 +29,29 @@ function App() {
       setMessages((prevMessages) => [...prevMessages, message]);
     });
 
+    socket.on('stl', (data: string) => {
+      // write data to stl file
+
+      console.log('stl received at client:', data);
+    });
+
     return () => {
       socket.disconnect();
       socket.off('connect');
       socket.off('message');
     };
+  }, []);
+
+  /* Fetch the STL file and print its content */
+  useEffect(() => {
+    fetch('/assets')
+      .then(response => response.text())
+      .then(data => {
+        console.log('STL file content:', data);
+      })
+      .catch(error => {
+        console.error('Error fetching STL file:', error);
+      });
   }, []);
   
 
@@ -40,13 +64,37 @@ function App() {
     }
   };
 
+  const STLModel = ({ url }: { url: string }) => {
+    // Use useLoader to load the STL file
+    const geometry = useLoader(STLLoader, url) as THREE.BufferGeometry;
+  
+    return (
+      <mesh geometry={geometry}>
+        <meshStandardMaterial color="gray" />
+      </mesh>
+    );
+  };
+
   return (
     <div className="App">
       <div>
-        <Link to="/results">Results</Link> 
+        <Link to="/results">Results</Link>
       </div>
-      <h1>Fabricait</h1>
-      <div className="messages">
+      <div>
+        <a href="/download">Download</a> 
+      </div>
+
+      <div>
+        <Canvas camera={{ position: [0, 0, 5] }}>
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} />
+        <Suspense fallback={null}>
+        <STLModel url="/assets" />
+        </Suspense>
+        <OrbitControls />
+        </Canvas>
+    </div>
+     <div className="messages">
         {messages.map((message, index) => (
           <div 
             key={index}
