@@ -1,17 +1,17 @@
 import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import App from './pages/App.tsx'
 import { Results } from './pages/Results.tsx'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 
+// Multi page routing
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: <App />, // Refers to App.tsx
   },
   {
     path: '/results',
-    element: <Results />,
+    element: <Results />, // Refers to Results.tsx
   }
 ])
 
