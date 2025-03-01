@@ -183,13 +183,30 @@ function App() {
         </div>
       </div>
       <div className="main-content">
-        <div className="canvas-container">
-          <Canvas camera={{ position: [0, 0, 200] }}>
-            <ambientLight intensity={0.5} />
+      <div className="canvas-container">
+          <Canvas 
+            camera={{ position: [0, 50, 200] }} 
+            shadows // Enable shadow support
+          >
+            {/* Lighting for shading */}
+            <ambientLight intensity={0.4} />
+            <directionalLight 
+              position={[10, 20, 10]} 
+              intensity={1.5} 
+              castShadow 
+              shadow-mapSize-width={1024}
+              shadow-mapSize-height={1024}
+            />
             <pointLight position={[10, 10, 10]} />
+
+            {/* Render STL Model */}
             <Suspense fallback={null}>
               <STLModel url={stlUrl} />
             </Suspense>
+
+            {/* Add Ground Plane */}
+            <GroundPlane />
+
             <OrbitControls />
           </Canvas>
         </div>
@@ -212,6 +229,10 @@ function App() {
         <div>
           <a href="/download">Download</a> 
         </div>
+        <div>
+        <input type="file" accept="image/*" onChange={handleImageChange} />
+        <button onClick={handleUpload}>Upload</button>
+      </div>
       </div>
       </section>
       

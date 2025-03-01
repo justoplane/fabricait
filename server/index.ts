@@ -9,6 +9,8 @@ import { PromptManager } from "./PromptManager";
 import { getPreprompt } from "./PrepromptGenerator";
 import { extractAndWriteSCAD, extractCustomParameters, writeCustomParameters } from "./parse";
 import { promises as fs } from 'fs';
+import multer from 'multer';
+
 
 const prisma = new PrismaClient();
 
@@ -172,17 +174,30 @@ app.get('/download', (req, res) => {
   });
 });
 
-// Get uploads
-// app.post("/upload", upload.single("image"), (req, res) => {
-//   if (!req.file) {
-//     return res.status(400).json({ message: "No file uploaded." });
-//   }
+// Configure Multer storage
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, "./assets/"); // Save files in the "uploads" folder
+  },
+  filename: (_req, file, cb) => {
+    cb(null, "image.png"); // Unique filename
+  },
+});
 
-//   res.json({
-//     message: "Image uploaded successfully!",
-//     imageUrl: `/uploads/${req.file.filename}`, // Relative path to the uploaded file
-//   });
-// });
+const upload = multer({ storage });
+
+app.post("/upload", upload.single("image"), (req: express.Request, res: express.Response): void => {
+  if (!req.file) {
+    res.status(400).json({ message: "No file uploaded." });
+    return;
+  }
+
+  res.json({
+    message: "Image uploaded successfully!",
+    imageUrl: `/uploads/${req.file.filename}`, // File URL
+  });
+});
+
 
 app.get('*', (req, res) => {
   console.log(req);
