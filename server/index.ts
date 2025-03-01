@@ -3,10 +3,12 @@ import { config } from 'dotenv';
 import http from 'http';
 import { Server } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
-import { data } from 'react-router';
 import { exec } from 'child_process';
-import fs from 'fs';
 import path from 'path';
+import { PromptManager } from "./PromptManager";
+import { getPreprompt } from "./PrepromptGenerator";
+import { extractAndWriteSCAD, extractCustomParameters } from "./parse";
+import { promises as fs } from 'fs';
 
 const prisma = new PrismaClient();
 
@@ -22,53 +24,77 @@ const io = new Server(server);
 const port = parseInt(process.env.PORT || '3000');
 
 // Callback function to handle receiving a prompt
-const handlePrompt = async (prompt: string) => {
-  // Make an API call to the AI model.
+const handlePrompt = async (prompt: string, PM: PromptManager) => {
+  try {
+    // Make an API call to the AI model.
+    const out = await PM.userAction(prompt);
 
+    // Write the output to a file
+    await extractAndWriteSCAD(out, './assets/input.scad');
 
-  // Convert received scad to stl
-  scadToStl();
-  
-  // Read the content of dp.stl file
-  const stlFilePath = path.join(__dirname, 'assets', 'dp.stl');
-  fs.readFile(stlFilePath, 'utf8', (err, data) => {
-    if (err) {
-      console.error('Error reading the STL file:', err);
-      return; 
-    }
-    // Emit the STL file content
-    io.emit('stl', data);
-  });
+    // Extract custom parameters from the prompt
+    const params = await extractCustomParameters(out);
+    console.log('Custom parameters:', params);
+
+    // Convert received scad to stl
+    await scadToStl();
+    
+    // Emit the STL file update
+    io.emit('stl', params);
+    console.log('stl/params emitted');
+  } catch (error) {
+    console.error('Error processing prompt:', error);
+    io.emit('error', 'Failed to process prompt');
+  }
+};
+
+const testparsing = async () => {
+  try {
+    const data = await fs.readFile('./assets/input.scad', 'utf-8');
+    const params = await extractCustomParameters(data);
+    console.log(params);
+    io.emit('stl', params);
+    console.log('stl/params emitted');
+  } catch (error) {
+      console.error('Error reading file:', error);
+      throw error;
+  }
 };
 
 // Convert scad to stl
-const scadToStl = async() => {
-  exec(`openscad -o ./assets/output.stl ./assets/input.scad`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      return;
-    }
-    if (stdout) {
-      console.log(`stdout: ${stdout}`);
-    }
-    if (stderr) {
-      console.error(`stderr: ${stderr}`);
-    }
-});
-}
+const scadToStl = async (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    exec(`openscad -o ./assets/output.stl ./assets/input.scad`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`OpenSCAD execution error: ${error.message}`);
+        io.emit('error', 'OpenSCAD failed to generate STL');
+        reject(error);
+        return;
+      }
+      if (stdout) {
+        console.log(`stdout: ${stdout}`);
+      }
+      if (stderr) {
+        console.error(`stderr: ${stderr}`);
+      }
+      resolve(); // Resolve after execution completes
+    });
+  });
+};
 
 io.on('connection', (socket) => {
   console.log('a user connected');
+  const PM = new PromptManager(getPreprompt());
 
   // Listen for text prompts from the client.
-  socket.on('message', (prompt) => {
+  socket.on('message', async (prompt) => {
     console.log('prompt received:', prompt);
-    handlePrompt(prompt);
+    //handlePrompt(prompt, PM);
+    testparsing();
   });
 
   socket.on('message', (message) => {
     console.log('message received:', message);
-
     io.emit('message', message);
   });
 
@@ -142,4 +168,3 @@ app.get('*', (req, res) => {
     </html>
     `);
 });
-
