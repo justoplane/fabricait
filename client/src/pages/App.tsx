@@ -164,7 +164,7 @@ function App() {
           {parameters.map((parameter, index) => (
             <div key={index} className="parameter-item">
               <div className="parameter-name">
-                {parameter.param_name}
+                <b>{parameter.description}</b>
               </div>
               <input
                 type="range"
@@ -177,12 +177,19 @@ function App() {
               />
               <span className="slider-value">{parameter.value}</span>
               <div className="description">
-                {parameter.description}
               </div>
             </div>
           ))}
         </div>
+        <div>
+          <a href="/download">Download</a> 
+        </div>
+        <div>
+        <input type="file" accept="image/*" onChange={handleImageChange} />
+        <button onClick={handleUpload}>Upload</button>
       </div>
+      </div>
+
       <div className="main-content">
       <div className="canvas-container">
           <Canvas 
@@ -228,13 +235,6 @@ function App() {
           />
           <button type="submit">Send</button>
         </form>
-        <div>
-          <a href="/download">Download</a> 
-        </div>
-        <div>
-        <input type="file" accept="image/*" onChange={handleImageChange} />
-        <button onClick={handleUpload}>Upload</button>
-      </div>
       </div>
       </section>
       

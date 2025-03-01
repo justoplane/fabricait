@@ -75,6 +75,7 @@ const assetsExist = async (prompt: string, PM: PromptManager) => {
     console.error('Error processing prompt:', error);
     io.emit('error', 'Failed to process prompt');
   }
+  scadToPng();
 }
 
 const updateParams = async (params: any) => {
