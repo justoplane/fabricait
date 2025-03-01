@@ -7,7 +7,7 @@ import { exec } from 'child_process';
 import path from 'path';
 import { PromptManager } from "./PromptManager";
 import { getPreprompt } from "./PrepromptGenerator";
-import { extractAndWriteSCAD, extractCustomParameters } from "./parse";
+import { extractAndWriteSCAD, extractCustomParameters, writeCustomParameters } from "./parse";
 import { promises as fs } from 'fs';
 
 const prisma = new PrismaClient();
@@ -28,17 +28,25 @@ const handlePrompt = async (prompt: string, PM: PromptManager) => {
   try {
     // Make an API call to the AI model.
     const out = await PM.userAction(prompt);
-
-    // Write the output to a file
+    // Extract scad file from AI resonse and write to input.scad
     await extractAndWriteSCAD(out, './assets/input.scad');
+    // Generate stl file and params
+    genSTL(out);
+  } catch (error) {
+    console.error('Error processing prompt:', error);
+    io.emit('error', 'Failed to process prompt');
+  }
+};
 
-    // Extract custom parameters from the prompt
-    const params = await extractCustomParameters(out);
-    console.log('Custom parameters:', params);
+const updateParams = async (params: any) => {
+  try {
+    // update params in scad file
+    const data = await fs.readFile('./assets/input.scad', 'utf-8');
+    await writeCustomParameters(data, params, './assets/input.scad');
 
-    // Convert received scad to stl
+    // Convert new scad data to stl
     await scadToStl();
-    
+
     // Emit the STL file update
     io.emit('stl', params);
     console.log('stl/params emitted');
@@ -46,6 +54,21 @@ const handlePrompt = async (prompt: string, PM: PromptManager) => {
     console.error('Error processing prompt:', error);
     io.emit('error', 'Failed to process prompt');
   }
+};
+
+const genSTL = async (out: string) => {
+      // Write the output to a file
+
+      // Extract custom parameters from the prompt
+      const params = await extractCustomParameters(out);
+      console.log('Custom parameters:', params);
+  
+      // Convert received scad to stl
+      await scadToStl();
+      
+      // Emit the STL file update
+      io.emit('stl', params);
+      console.log('stl/params emitted');
 };
 
 const testparsing = async () => {
@@ -96,6 +119,12 @@ io.on('connection', (socket) => {
   socket.on('message', (message) => {
     console.log('message received:', message);
     io.emit('message', message);
+  });
+
+  socket.on('params', (params) => {
+    // Put received parameters back into scad file
+    updateParams(params);
+    console.log('params received:', params);
   });
 
   socket.on('disconnect', () => {

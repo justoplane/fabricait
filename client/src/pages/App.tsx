@@ -66,6 +66,11 @@ function App() {
     });
   };
 
+  const emitParamChanges = () => {
+    // Emit the updated parameters to the server
+    socket.emit('params', parameters);
+  };
+
   const STLModel = ({ url }: { url: string }) => {
     // Use useLoader to load the STL file
     const geometry = useLoader(STLLoader, url) as THREE.BufferGeometry;
@@ -80,6 +85,7 @@ function App() {
   return (
     <div className="App">
       <div className="sidebar">
+        <button onClick={emitParamChanges}>Update Parameters</button>
         <div className="map">
           {parameters.map((parameter, index) => (
             <div key={index} className="parameter-item">

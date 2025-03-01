@@ -33,6 +33,31 @@ export async function extractCustomParameters(input: string): Promise<CustomPara
     return parameters;
 }
 
+export async function writeCustomParameters(input: string, parameters: CustomParameter[], outputPath: string): Promise<void> {
+    const lines = input.split('\n');
+    const startIdx = lines.findIndex(line => line.includes("/* START CUSTOM PARAMETERS */"));
+    const endIdx = lines.findIndex(line => line.includes("/* END CUSTOM PARAMETERS */"));
+    
+    if (startIdx === -1 || endIdx === -1 || startIdx >= endIdx) {
+        console.error("Error: Could not find valid custom parameters section.");
+    }
+    
+    const paramLines = lines.slice(startIdx + 1, endIdx);
+    
+    // Remove old parameter lines
+    lines.splice(startIdx + 1, paramLines.length);
+    
+    // Add updated parameters
+    parameters.forEach(param => {
+        lines.splice(startIdx + 1, 0, `${param.param_name} = ${param.value};  // ${param.description}`);
+    });
+    
+    const output = lines.join('\n');
+
+    await fs.writeFile(outputPath, output, 'utf8');
+    console.log(`SCAD content successfully written to ${outputPath}`);
+}
+
 export async function extractAndWriteSCAD(input: string, outputPath: string) {
     // Split the input string into lines
     const lines = input.split('\n');
