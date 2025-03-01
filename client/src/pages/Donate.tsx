@@ -1,7 +1,7 @@
 import './App.css';
 import { Link } from 'react-router';
 
-export function Results(){
+export function Donate(){
     return (
         <div>
             <header>

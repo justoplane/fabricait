@@ -172,6 +172,18 @@ app.get('/download', (req, res) => {
   });
 });
 
+// Get uploads
+// app.post("/upload", upload.single("image"), (req, res) => {
+//   if (!req.file) {
+//     return res.status(400).json({ message: "No file uploaded." });
+//   }
+
+//   res.json({
+//     message: "Image uploaded successfully!",
+//     imageUrl: `/uploads/${req.file.filename}`, // Relative path to the uploaded file
+//   });
+// });
+
 app.get('*', (req, res) => {
   console.log(req);
   res.send(`
